@@ -17,6 +17,7 @@ module CounterCulture
       @delta_magnitude = options[:delta_magnitude] || 1
       @with_papertrail = options.fetch(:with_papertrail, false)
       @execute_after_commit = options.fetch(:execute_after_commit, false)
+      @excute_after_counter = options.fetch(:execute_after_counter, ->(obj) { true })
 
       if @execute_after_commit
         begin
@@ -120,6 +121,10 @@ module CounterCulture
 
         execute_now_or_after_commit(obj) do
           klass.where(primary_key => id_to_change).update_all updates.join(', ')
+        end
+
+        if @excute_after_counter.is_a?(Proc)
+          @excute_after_counter.call(obj)
         end
       end
     end
